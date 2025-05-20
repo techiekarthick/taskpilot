@@ -249,8 +249,8 @@ export default function TaskPilotPage() {
         onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
       />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col md:flex-row gap-6">
-        {/* Filters Section - Left Column on Desktop */}
-        <div className="w-full md:w-64 lg:w-72 space-y-6 md:sticky md:top-20 md:self-start">
+        {/* Filters Section - Left Column on Desktop, Top on Mobile */}
+        <div className="w-full md:w-64 lg:w-72 space-y-6 md:sticky md:top-20 md:self-start"> {/* md:top-20 assumes header height + some margin */}
           <div className="p-4 bg-card rounded-lg shadow-md space-y-4">
             <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center">
               <FilterIcon className="mr-2 h-5 w-5 text-primary" />
@@ -287,9 +287,9 @@ export default function TaskPilotPage() {
           </div>
         </div>
 
-        {/* Task List Section - Right Column on Desktop */}
-        <div className="flex-1 min-w-0"> {/* min-w-0 is important for flex children */}
-          <ScrollArea className="h-[calc(100vh-180px)] md:h-[calc(100vh-120px)] pr-2"> {/* Adjust height as needed */}
+        {/* Task List Section - Right Column on Desktop, Below Filters on Mobile */}
+        <div className="flex-1 min-w-0 flex flex-col"> {/* Added flex flex-col */}
+          <ScrollArea className="flex-grow pr-2"> {/* Changed to flex-grow */}
             <TaskList
               tasks={filteredTasks}
               onToggleComplete={handleToggleComplete}
