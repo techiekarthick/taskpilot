@@ -66,16 +66,23 @@ export default function SwiftTaskPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <ScrollArea className="flex-grow">
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-4 max-w-2xl">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col lg:flex-row gap-6 lg:gap-8">
+        {/* Left Column: Add Task Form */}
+        <div className="lg:w-[400px] lg:flex-shrink-0">
           <AddTaskForm onAddTask={handleAddTask} />
-          <TaskList
-            tasks={tasks}
-            onToggleComplete={handleToggleComplete}
-            onDeleteTask={handleDeleteTask}
-          />
-        </main>
-      </ScrollArea>
+        </div>
+
+        {/* Right Column: Task List */}
+        <div className="flex-1 flex flex-col min-w-0"> {/* min-w-0 prevents flex item from overflowing */}
+          <ScrollArea className="flex-grow h-0"> {/* h-0 and flex-grow for ScrollArea to fill available vertical space */}
+            <TaskList
+              tasks={tasks}
+              onToggleComplete={handleToggleComplete}
+              onDeleteTask={handleDeleteTask}
+            />
+          </ScrollArea>
+        </div>
+      </main>
       <Toaster />
     </div>
   );
