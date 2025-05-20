@@ -6,18 +6,20 @@ import type { Task } from '@/lib/types';
 import Header from '@/components/swift-task/Header';
 import AddTaskForm from '@/components/swift-task/AddTaskForm';
 import TaskList from '@/components/swift-task/TaskList';
-import EditTaskModal from '@/components/swift-task/EditTaskModal'; // New import
+import EditTaskModal from '@/components/swift-task/EditTaskModal';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function TaskPilotPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const { toast } = useToast();
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null); // For editing
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // For editing modal
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -25,20 +27,20 @@ export default function TaskPilotPage() {
 
   useEffect(() => {
     if (!isClient) return;
-    const storedTasks = localStorage.getItem('swiftTasks'); 
+    const storedTasks = localStorage.getItem('swiftTasks');
     if (storedTasks) {
       try {
         setTasks(JSON.parse(storedTasks));
       } catch (error) {
         console.error("Failed to parse tasks from local storage", error);
-        localStorage.removeItem('swiftTasks'); 
+        localStorage.removeItem('swiftTasks');
       }
     }
   }, [isClient]);
 
   useEffect(() => {
     if (!isClient) return;
-    localStorage.setItem('swiftTasks', JSON.stringify(tasks)); 
+    localStorage.setItem('swiftTasks', JSON.stringify(tasks));
   }, [tasks, isClient]);
 
   const requestNotificationPermission = useCallback(async () => {
@@ -76,24 +78,24 @@ export default function TaskPilotPage() {
     console.log(`[showNotification] Attempting to show notification for task: "${task.title}"`);
     const notification = new Notification(task.title, {
       body: task.details || 'Task reminder!',
-      icon: '/logo.png', 
+      icon: '/logo.png', // Consider creating a logo.png in your public folder
       data: { taskId: task.id },
-      tag: `task-pilot-${task.id}` 
+      tag: `task-pilot-${task.id}`
     });
 
     notification.onclick = () => {
       console.log('[Notification Clicked] Task ID:', task.id);
-      window.focus(); 
+      window.focus();
       setHighlightedTaskId(task.id);
-      setTimeout(() => setHighlightedTaskId(null), 3000);
+      setTimeout(() => setHighlightedTaskId(null), 3000); // Highlight duration
       notification.close();
     };
 
     notification.onerror = (err) => {
       console.error('Notification API error:', err);
-      toast({ 
-        title: 'Notification Error', 
-        description: `Could not display reminder for "${task.title}".`, 
+      toast({
+        title: 'Notification Error',
+        description: `Could not display reminder for "${task.title}".`,
         variant: 'destructive'
       });
     };
@@ -161,6 +163,7 @@ export default function TaskPilotPage() {
       title: "Task Added",
       description: `"${title}" has been added to your list.`,
     });
+    setIsAddTaskModalOpen(false); // Close modal after adding task
   };
 
   const handleToggleComplete = (id: string) => {
@@ -179,7 +182,6 @@ export default function TaskPilotPage() {
     });
   };
 
-  // --- Edit Task Logic ---
   const handleOpenEditModal = (task: Task) => {
     setEditingTask(task);
     setIsEditModalOpen(true);
@@ -202,8 +204,6 @@ export default function TaskPilotPage() {
     });
     handleCloseEditModal();
   };
-  // --- End Edit Task Logic ---
-
 
   const completedTasksCount = tasks.filter(task => task.completed).length;
   const totalTasksCount = tasks.length;
@@ -218,23 +218,34 @@ export default function TaskPilotPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header completedTasksCount={completedTasksCount} totalTasksCount={totalTasksCount} />
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col lg:flex-row gap-6 lg:gap-8">
-        <div className="lg:w-[400px] lg:flex-shrink-0">
-          <AddTaskForm onAddTask={handleAddTask} />
-        </div>
+      <Header
+        completedTasksCount={completedTasksCount}
+        totalTasksCount={totalTasksCount}
+        onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
+      />
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col">
         <div className="flex-1 flex flex-col min-w-0">
            <ScrollArea className="flex-grow h-0 pr-2">
             <TaskList
               tasks={tasks}
               onToggleComplete={handleToggleComplete}
               onDeleteTask={handleDeleteTask}
-              onOpenEditModal={handleOpenEditModal} // Pass handler
+              onOpenEditModal={handleOpenEditModal}
               highlightedTaskId={highlightedTaskId}
             />
           </ScrollArea>
         </div>
       </main>
+
+      <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Add New Task</DialogTitle>
+          </DialogHeader>
+          <AddTaskForm onAddTask={handleAddTask} />
+        </DialogContent>
+      </Dialog>
+
       {editingTask && (
         <EditTaskModal
           task={editingTask}

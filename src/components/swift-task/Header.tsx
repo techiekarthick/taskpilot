@@ -1,14 +1,16 @@
 
 import type { FC } from 'react';
-import { ClipboardList, CheckCircle } from 'lucide-react';
+import { ClipboardList, CheckCircle, PlusCircle } from 'lucide-react';
 import ThemeToggleButton from './ThemeToggleButton';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   completedTasksCount: number;
   totalTasksCount: number;
+  onOpenAddTaskModal: () => void;
 }
 
-const Header: FC<HeaderProps> = ({ completedTasksCount, totalTasksCount }) => {
+const Header: FC<HeaderProps> = ({ completedTasksCount, totalTasksCount, onOpenAddTaskModal }) => {
   return (
     <header className="py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-start">
       <div>
@@ -28,7 +30,13 @@ const Header: FC<HeaderProps> = ({ completedTasksCount, totalTasksCount }) => {
           </div>
         )}
       </div>
-      <ThemeToggleButton />
+      <div className="flex items-center space-x-2">
+        <Button onClick={onOpenAddTaskModal} size="sm" className="text-xs">
+          <PlusCircle className="mr-1.5 h-4 w-4" />
+          New Task
+        </Button>
+        <ThemeToggleButton />
+      </div>
     </header>
   );
 };
