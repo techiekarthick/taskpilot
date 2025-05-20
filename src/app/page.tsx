@@ -295,7 +295,8 @@ export default function TaskPilotPage() {
             totalTasksCount={totalTasksCount}
             onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
           />
-          <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col">
+          {/* This div is now the main content area within SidebarInset */}
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col">
             <div className="md:hidden mb-4">
               <SidebarTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-sm">
@@ -312,7 +313,7 @@ export default function TaskPilotPage() {
                 highlightedTaskId={highlightedTaskId}
               />
             </ScrollArea>
-          </main>
+          </div>
         </SidebarInset>
 
         <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
