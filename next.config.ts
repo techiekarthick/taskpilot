@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
   output: "export", // 👈 Required for static export
   basePath: "/taskpilot", // 👈 Replace with your repo name
   assetPrefix: "/taskpilot/", // 👈 Same here
+  trailingSlash: true,
 };
 
 export default nextConfig;
