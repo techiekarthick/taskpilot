@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'SwiftTask - Your Friendly To-Do List',
-  description: 'Manage your tasks efficiently with SwiftTask.',
+  description: 'Manage your tasks efficiently and smoothly.',
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
         <Toaster />
       </body>
