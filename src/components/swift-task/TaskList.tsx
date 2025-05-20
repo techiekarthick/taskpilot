@@ -9,10 +9,9 @@ interface TaskListProps {
   tasks: Task[];
   onToggleComplete: (id: string) => void;
   onDeleteTask: (id: string) => void;
-  onSuggestSubtasks: (task: Task) => void;
 }
 
-const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask, onSuggestSubtasks }) => {
+const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask }) => {
   const activeTasks = tasks.filter(task => !task.completed).sort((a, b) => b.createdAt - a.createdAt);
   const completedTasks = tasks.filter(task => task.completed).sort((a, b) => b.createdAt - a.createdAt);
 
@@ -38,7 +37,6 @@ const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask, on
                 task={task}
                 onToggleComplete={onToggleComplete}
                 onDeleteTask={onDeleteTask}
-                onSuggestSubtasks={onSuggestSubtasks}
               />
             ))}
           </div>
@@ -55,7 +53,6 @@ const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask, on
                 task={task}
                 onToggleComplete={onToggleComplete}
                 onDeleteTask={onDeleteTask}
-                onSuggestSubtasks={onSuggestSubtasks} 
               />
             ))}
           </div>

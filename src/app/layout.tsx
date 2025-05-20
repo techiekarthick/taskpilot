@@ -8,15 +8,9 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
-// Geist Mono can be kept if needed for specific text styles, otherwise remove
-// const geistMono = Geist_Mono({
-//   variable: '--font-geist-mono',
-//   subsets: ['latin'],
-// });
-
 export const metadata: Metadata = {
   title: 'SwiftTask - Your Friendly To-Do List',
-  description: 'Manage your tasks efficiently with SwiftTask, featuring AI-powered suggestions.',
+  description: 'Manage your tasks efficiently with SwiftTask.',
 };
 
 export default function RootLayout({
