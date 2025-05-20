@@ -26,6 +26,8 @@ interface AddTaskFormProps {
   ) => void;
 }
 
+const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
+
 const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
@@ -34,7 +36,7 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
   const [reminderMinute, setReminderMinute] = useState('');
   const [priority, setPriority] = useState<Task['priority']>('none');
   const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>();
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState<string | undefined>(undefined);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +69,7 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
       reminderTimestamp,
       priority === 'none' ? undefined : priority,
       dueTimestamp,
-      category.trim() || undefined
+      category
     );
 
     setTitle('');
@@ -77,7 +79,7 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
     setReminderMinute('');
     setPriority('none');
     setSelectedDueDate(undefined);
-    setCategory('');
+    setCategory(undefined);
   };
 
   return (
@@ -136,14 +138,17 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
             <Label htmlFor="task-category" className="block text-xs font-medium text-foreground mb-1.5">
               Category (Optional)
             </Label>
-            <Input
-              id="task-category"
-              type="text"
-              placeholder="e.g., Work, Personal"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="text-sm bg-input placeholder:text-muted-foreground h-9"
-            />
+            <Select value={category} onValueChange={(value) => setCategory(value === "none" ? undefined : value)}>
+              <SelectTrigger id="task-category" className="w-full text-xs h-9 bg-input">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {predefinedCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
