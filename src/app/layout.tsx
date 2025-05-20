@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'SwiftTask - Your Friendly To-Do List',
-  description: 'Manage your tasks efficiently and smoothly.',
+  title: 'MomentumFlow - Keep Your Tasks Moving',
+  description: 'Organize your tasks and build momentum with MomentumFlow.',
 };
 
 export default function RootLayout({
@@ -21,11 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning={true}>
         <ThemeProvider
           defaultTheme="system"
-          storageKey="swift-task-theme"
+          storageKey="momentum-flow-theme"
         >
           {children}
           <Toaster />

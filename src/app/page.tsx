@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function SwiftTaskPage() {
+export default function MomentumFlowPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const { toast } = useToast();
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function SwiftTaskPage() {
   // Load tasks from local storage on initial render
   useEffect(() => {
     if (!isClient) return;
-    const storedTasks = localStorage.getItem('swiftTasks');
+    const storedTasks = localStorage.getItem('swiftTasks'); // Note: If you want to migrate old tasks, this key needs to change too. For now, new name applies to new tasks.
     if (storedTasks) {
       try {
         setTasks(JSON.parse(storedTasks));
@@ -37,7 +37,7 @@ export default function SwiftTaskPage() {
   // Save tasks to local storage whenever tasks change
   useEffect(() => {
     if (!isClient) return;
-    localStorage.setItem('swiftTasks', JSON.stringify(tasks));
+    localStorage.setItem('swiftTasks', JSON.stringify(tasks)); // Note: See above.
   }, [tasks, isClient]);
 
   const requestNotificationPermission = useCallback(async () => {
@@ -69,24 +69,21 @@ export default function SwiftTaskPage() {
     
     if (Notification.permission !== 'granted') {
       console.warn(`[showNotification] Permission not granted for "${task.title}" at the moment of showing. Aborting.`);
-      // Optionally, alert the user if this state is unexpected
-      // toast({ title: `Reminder Skipped: ${task.title}`, description: "Notification permission not granted.", variant: "destructive" });
       return;
     }
 
     console.log(`[showNotification] Attempting to show notification for task: "${task.title}"`);
     const notification = new Notification(task.title, {
       body: task.details || 'Task reminder!',
-      icon: '/logo.png', // Optional: ensure logo.png is in your /public folder
+      icon: '/logo.png', 
       data: { taskId: task.id },
-      tag: `swift-task-${task.id}` // Prevents duplicate notifications for the same task
+      tag: `momentum-flow-${task.id}` // Prevents duplicate notifications for the same task
     });
 
     notification.onclick = () => {
       console.log('[Notification Clicked] Task ID:', task.id);
-      window.focus(); // Attempt to focus the current window/tab.
+      window.focus(); 
       setHighlightedTaskId(task.id);
-      // Highlight will be removed by a timeout to ensure visibility
       setTimeout(() => setHighlightedTaskId(null), 3000);
       notification.close();
     };
@@ -176,7 +173,7 @@ export default function SwiftTaskPage() {
   if (!isClient) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <p>Loading SwiftTask...</p>
+        <p>Loading MomentumFlow...</p>
       </div>
     );
   }

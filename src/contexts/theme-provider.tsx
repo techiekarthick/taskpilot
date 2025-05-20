@@ -29,7 +29,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export const ThemeProvider: FC<ThemeProviderProps> = ({
   children,
   defaultTheme = "system",
-  storageKey = "swift-task-theme",
+  storageKey = "momentum-flow-theme", // Default storage key
 }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === 'undefined') {
