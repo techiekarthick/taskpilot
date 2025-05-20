@@ -51,6 +51,7 @@ export default function SwiftTaskPage() {
     if (Notification.permission !== 'denied') {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
+        toast({ title: "Notification Permission Granted", description: "You will now receive task reminders." });
         return true;
       } else {
         toast({ title: "Notification Permission Denied", description: "You won't receive task reminders.", variant: "destructive" });
@@ -61,25 +62,44 @@ export default function SwiftTaskPage() {
   }, [toast, isClient]);
 
   const showNotification = useCallback((task: Task) => {
-    if (!isClient) return;
+    if (!isClient) {
+      console.log('[showNotification] Bailed: !isClient');
+      return;
+    }
+    
+    if (Notification.permission !== 'granted') {
+      console.warn(`[showNotification] Permission not granted for "${task.title}" at the moment of showing. Aborting.`);
+      // Optionally, alert the user if this state is unexpected
+      // toast({ title: `Reminder Skipped: ${task.title}`, description: "Notification permission not granted.", variant: "destructive" });
+      return;
+    }
+
+    console.log(`[showNotification] Attempting to show notification for task: "${task.title}"`);
     const notification = new Notification(task.title, {
       body: task.details || 'Task reminder!',
-      icon: '/logo.png', // Optional: Add a logo in public folder
-      data: { taskId: task.id, url: window.location.href }, // Pass URL to focus correct tab
+      icon: '/logo.png', // Optional: ensure logo.png is in your /public folder
+      data: { taskId: task.id },
+      tag: `swift-task-${task.id}` // Prevents duplicate notifications for the same task
     });
 
-    notification.onclick = (event) => {
-      const targetUrl = event.target?.data?.url;
-      if (targetUrl) {
-        window.open(targetUrl, '_blank')?.focus(); // Open in new tab or focus existing
-      } else {
-        window.focus();
-      }
+    notification.onclick = () => {
+      console.log('[Notification Clicked] Task ID:', task.id);
+      window.focus(); // Attempt to focus the current window/tab.
       setHighlightedTaskId(task.id);
-      setTimeout(() => setHighlightedTaskId(null), 3000); // Remove highlight after 3 seconds
+      // Highlight will be removed by a timeout to ensure visibility
+      setTimeout(() => setHighlightedTaskId(null), 3000);
       notification.close();
     };
-  }, [isClient]);
+
+    notification.onerror = (err) => {
+      console.error('Notification API error:', err);
+      toast({ 
+        title: 'Notification Error', 
+        description: `Could not display reminder for "${task.title}".`, 
+        variant: 'destructive'
+      });
+    };
+  }, [isClient, setHighlightedTaskId, toast]);
 
 
   useEffect(() => {
@@ -89,22 +109,27 @@ export default function SwiftTaskPage() {
     tasks.forEach(task => {
       if (task.reminderAt && task.reminderAt > Date.now() && !task.completed) {
         const delay = task.reminderAt - Date.now();
+        console.log(`[Reminder Effect] Setting reminder for "${task.title}" in ${delay}ms. Permission: ${Notification.permission}`);
+        
         const timeoutId = setTimeout(() => {
+          console.log(`[Reminder Timeout Fired] Task: "${task.title}", Current Permission: ${Notification.permission}`);
           if (Notification.permission === 'granted') {
+            console.log(`[Reminder Timeout] Permission granted, calling showNotification for "${task.title}"`);
             showNotification(task);
           } else {
-            // If permission was not granted when reminder was set, prompt again or inform user
-            console.log(`Reminder for "${task.title}" - permission not granted at time of reminder.`);
-             toast({ title: `Reminder: ${task.title}`, description: task.details || "Time for your task!" });
+            console.warn(`[Reminder Timeout] Permission NOT granted for "${task.title}". Showing toast as fallback.`);
+            toast({ title: `Reminder: ${task.title}`, description: task.details || "Time for your task!" });
           }
-          // Optionally, mark reminder as passed or update task state
         }, delay);
         timeouts.set(task.id, timeoutId);
       }
     });
 
     return () => {
-      timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+      timeouts.forEach((timeoutId, taskId) => {
+        console.log(`[Reminder Effect Cleanup] Clearing timeout for task ID: ${taskId}`);
+        clearTimeout(timeoutId);
+      });
     };
   }, [tasks, showNotification, toast, isClient]);
 
@@ -149,7 +174,6 @@ export default function SwiftTaskPage() {
   };
 
   if (!isClient) {
-    // Render a loading state or null during SSR/initial client render phase
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
         <p>Loading SwiftTask...</p>
