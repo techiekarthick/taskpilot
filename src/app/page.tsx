@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -66,7 +67,7 @@ export default function SwiftTaskPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <ScrollArea className="flex-grow">
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 max-w-2xl"> {/* max-w-2xl for a more compact main area */}
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-4 max-w-2xl">
           <AddTaskForm onAddTask={handleAddTask} />
           <TaskList
             tasks={tasks}
