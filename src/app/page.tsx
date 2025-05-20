@@ -247,43 +247,48 @@ export default function TaskPilotPage() {
         totalTasksCount={totalTasksCount}
         onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
       />
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col md:flex-row md:space-x-6">
         
-        <div className="mb-4 p-4 bg-card/50 rounded-lg shadow">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="category-filter" className="block text-xs font-medium text-foreground mb-1.5">Filter by Category</Label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger id="category-filter" className="w-full text-xs h-9 bg-input">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {predefinedCategories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="priority-filter" className="block text-xs font-medium text-foreground mb-1.5">Filter by Priority</Label>
-              <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Task['priority'] | 'all')}>
-                <SelectTrigger id="priority-filter" className="w-full text-xs h-9 bg-input">
-                  <SelectValue placeholder="Filter by priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorityOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* Left Sidebar for Filters */}
+        <aside className="md:w-60 lg:w-64 xl:w-72 flex-shrink-0 mb-6 md:mb-0">
+          <div className="p-4 bg-card/60 rounded-lg shadow-md md:sticky md:top-20"> {/* Adjust top based on header height */}
+            <h2 className="text-lg font-semibold text-foreground mb-4">Filters</h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="category-filter" className="block text-sm font-medium text-foreground mb-1.5">Category</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger id="category-filter" className="w-full text-sm h-9 bg-input">
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {predefinedCategories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                    <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="priority-filter" className="block text-sm font-medium text-foreground mb-1.5">Priority</Label>
+                <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Task['priority'] | 'all')}>
+                  <SelectTrigger id="priority-filter" className="w-full text-sm h-9 bg-input">
+                    <SelectValue placeholder="Filter by priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {priorityOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </div>
+        </aside>
 
+        {/* Right side for Task List */}
         <div className="flex-1 flex flex-col min-w-0">
-           <ScrollArea className="flex-grow h-0 pr-2">
+           <ScrollArea className="flex-grow h-0 pr-2"> {/* h-0 is important for ScrollArea to fill space in flex */}
             <TaskList
               tasks={filteredTasks}
               onToggleComplete={handleToggleComplete}
