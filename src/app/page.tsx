@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Task } from '@/lib/types';
 import Header from '@/components/swift-task/Header';
 import AddTaskForm from '@/components/swift-task/AddTaskForm';
@@ -11,6 +11,18 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
+
+// Duplicating for now, consider moving to a shared constants file if used in more places
+const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
+const priorityOptions: Array<{ value: Task['priority'] | 'all', label: string }> = [
+  { value: 'all', label: 'All Priorities' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+  { value: 'none', label: 'None' },
+];
 
 export default function TaskPilotPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -20,6 +32,10 @@ export default function TaskPilotPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<Task['priority'] | 'all'>('all');
+
 
   useEffect(() => {
     setIsClient(true);
@@ -78,7 +94,7 @@ export default function TaskPilotPage() {
     console.log(`[showNotification] Attempting to show notification for task: "${task.title}"`);
     const notification = new Notification(task.title, {
       body: task.details || 'Task reminder!',
-      icon: '/logo.png', // Consider creating a logo.png in your public folder
+      icon: '/logo.png', 
       data: { taskId: task.id },
       tag: `task-pilot-${task.id}`
     });
@@ -87,7 +103,7 @@ export default function TaskPilotPage() {
       console.log('[Notification Clicked] Task ID:', task.id);
       window.focus();
       setHighlightedTaskId(task.id);
-      setTimeout(() => setHighlightedTaskId(null), 3000); // Highlight duration
+      setTimeout(() => setHighlightedTaskId(null), 3000); 
       notification.close();
     };
 
@@ -163,7 +179,7 @@ export default function TaskPilotPage() {
       title: "Task Added",
       description: `"${title}" has been added to your list.`,
     });
-    setIsAddTaskModalOpen(false); // Close modal after adding task
+    setIsAddTaskModalOpen(false); 
   };
 
   const handleToggleComplete = (id: string) => {
@@ -205,8 +221,16 @@ export default function TaskPilotPage() {
     handleCloseEditModal();
   };
 
-  const completedTasksCount = tasks.filter(task => task.completed).length;
-  const totalTasksCount = tasks.length;
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const categoryMatch = categoryFilter === 'all' || task.category === categoryFilter || (categoryFilter === 'uncategorized' && !task.category);
+      const priorityMatch = priorityFilter === 'all' || task.priority === priorityFilter;
+      return categoryMatch && priorityMatch;
+    });
+  }, [tasks, categoryFilter, priorityFilter]);
+
+  const completedTasksCount = filteredTasks.filter(task => task.completed).length;
+  const totalTasksCount = filteredTasks.length;
 
   if (!isClient) {
     return (
@@ -224,10 +248,44 @@ export default function TaskPilotPage() {
         onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
       />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col">
+        
+        <div className="mb-4 p-4 bg-card/50 rounded-lg shadow">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="category-filter" className="block text-xs font-medium text-foreground mb-1.5">Filter by Category</Label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger id="category-filter" className="w-full text-xs h-9 bg-input">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {predefinedCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="priority-filter" className="block text-xs font-medium text-foreground mb-1.5">Filter by Priority</Label>
+              <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Task['priority'] | 'all')}>
+                <SelectTrigger id="priority-filter" className="w-full text-xs h-9 bg-input">
+                  <SelectValue placeholder="Filter by priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  {priorityOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
         <div className="flex-1 flex flex-col min-w-0">
            <ScrollArea className="flex-grow h-0 pr-2">
             <TaskList
-              tasks={tasks}
+              tasks={filteredTasks}
               onToggleComplete={handleToggleComplete}
               onDeleteTask={handleDeleteTask}
               onOpenEditModal={handleOpenEditModal}
