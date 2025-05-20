@@ -13,8 +13,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { FilterIcon } from 'lucide-react';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarTrigger,
+  SidebarInset,
+} from '@/components/ui/sidebar';
 
-// Duplicating for now, consider moving to a shared constants file if used in more places
+
 const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
 const priorityOptions: Array<{ value: Task['priority'] | 'all', label: string }> = [
   { value: 'all', label: 'All Priorities' },
@@ -241,83 +251,89 @@ export default function TaskPilotPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header
-        completedTasksCount={completedTasksCount}
-        totalTasksCount={totalTasksCount}
-        onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
-      />
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col md:flex-row md:space-x-6">
-        
-        {/* Left Sidebar for Filters */}
-        <aside className="md:w-60 lg:w-64 xl:w-72 flex-shrink-0 mb-6 md:mb-0">
-          <div className="p-4 bg-card/60 rounded-lg shadow-md md:sticky md:top-20"> {/* Adjust top based on header height */}
-            <h2 className="text-lg font-semibold text-foreground mb-4">Filters</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="category-filter" className="block text-sm font-medium text-foreground mb-1.5">Category</Label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger id="category-filter" className="w-full text-sm h-9 bg-input">
-                    <SelectValue placeholder="Filter by category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {predefinedCategories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                    <SelectItem value="uncategorized">Uncategorized</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="priority-filter" className="block text-sm font-medium text-foreground mb-1.5">Priority</Label>
-                <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Task['priority'] | 'all')}>
-                  <SelectTrigger id="priority-filter" className="w-full text-sm h-9 bg-input">
-                    <SelectValue placeholder="Filter by priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {priorityOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background flex flex-col">
+        <Sidebar side="left" collapsible="icon" className="md:border-r">
+          <SidebarHeader>
+            <h2 className="text-lg font-semibold text-sidebar-foreground px-2">Filters</h2>
+          </SidebarHeader>
+          <SidebarContent className="p-2 space-y-4">
+            <div>
+              <Label htmlFor="category-filter" className="block text-sm font-medium text-sidebar-foreground mb-1.5 px-2">Category</Label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger id="category-filter" className="w-full text-sm h-9 bg-input">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {predefinedCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-        </aside>
+            <div>
+              <Label htmlFor="priority-filter" className="block text-sm font-medium text-sidebar-foreground mb-1.5 px-2">Priority</Label>
+              <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Task['priority'] | 'all')}>
+                <SelectTrigger id="priority-filter" className="w-full text-sm h-9 bg-input">
+                  <SelectValue placeholder="Filter by priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  {priorityOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </SidebarContent>
+        </Sidebar>
 
-        {/* Right side for Task List */}
-        <div className="flex-1 flex flex-col min-w-0">
-           <ScrollArea className="flex-grow h-0 pr-2"> {/* h-0 is important for ScrollArea to fill space in flex */}
-            <TaskList
-              tasks={filteredTasks}
-              onToggleComplete={handleToggleComplete}
-              onDeleteTask={handleDeleteTask}
-              onOpenEditModal={handleOpenEditModal}
-              highlightedTaskId={highlightedTaskId}
-            />
-          </ScrollArea>
-        </div>
-      </main>
+        <SidebarInset>
+          <Header
+            completedTasksCount={completedTasksCount}
+            totalTasksCount={totalTasksCount}
+            onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
+          />
+          <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col">
+            <div className="md:hidden mb-4">
+              <SidebarTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <FilterIcon className="mr-2 h-4 w-4" /> Filters
+                </Button>
+              </SidebarTrigger>
+            </div>
+            <ScrollArea className="flex-grow h-0 pr-2"> 
+              <TaskList
+                tasks={filteredTasks}
+                onToggleComplete={handleToggleComplete}
+                onDeleteTask={handleDeleteTask}
+                onOpenEditModal={handleOpenEditModal}
+                highlightedTaskId={highlightedTaskId}
+              />
+            </ScrollArea>
+          </main>
+        </SidebarInset>
 
-      <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-card">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Add New Task</DialogTitle>
-          </DialogHeader>
-          <AddTaskForm onAddTask={handleAddTask} />
-        </DialogContent>
-      </Dialog>
+        <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
+          <DialogContent className="sm:max-w-[425px] bg-card">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Add New Task</DialogTitle>
+            </DialogHeader>
+            <AddTaskForm onAddTask={handleAddTask} />
+          </DialogContent>
+        </Dialog>
 
-      {editingTask && (
-        <EditTaskModal
-          task={editingTask}
-          isOpen={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          onUpdateTask={handleUpdateTask}
-        />
-      )}
-      <Toaster />
-    </div>
+        {editingTask && (
+          <EditTaskModal
+            task={editingTask}
+            isOpen={isEditModalOpen}
+            onClose={handleCloseEditModal}
+            onUpdateTask={handleUpdateTask}
+          />
+        )}
+        <Toaster />
+      </div>
+    </SidebarProvider>
   );
 }
