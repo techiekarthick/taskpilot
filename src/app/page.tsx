@@ -39,7 +39,7 @@ export default function SwiftTaskPage() {
       completed: false,
       createdAt: Date.now(),
     };
-    setTasks(prevTasks => [...prevTasks, newTask]);
+    setTasks(prevTasks => [newTask, ...prevTasks]); // Add new tasks to the beginning
     toast({
       title: "Task Added",
       description: `"${title}" has been added to your list.`,
@@ -66,7 +66,7 @@ export default function SwiftTaskPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <ScrollArea className="flex-grow">
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-3xl">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 max-w-2xl"> {/* max-w-2xl for a more compact main area */}
           <AddTaskForm onAddTask={handleAddTask} />
           <TaskList
             tasks={tasks}

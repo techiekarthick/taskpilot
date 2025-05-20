@@ -25,17 +25,17 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
   };
 
   return (
-    <Card className="mb-6 shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center text-xl">
-          <PlusCircle className="mr-2 h-6 w-6 text-primary-foreground fill-primary" />
+    <Card className="mb-5 shadow-lg">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center text-lg">
+          <PlusCircle className="mr-2 h-5 w-5 text-primary-foreground fill-primary" />
           Add New Task
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="task-title" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="task-title" className="block text-xs font-medium text-foreground mb-1">
               Task Title
             </label>
             <Input
@@ -45,11 +45,11 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="bg-card"
+              className="bg-card text-sm"
             />
           </div>
           <div>
-            <label htmlFor="task-details" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="task-details" className="block text-xs font-medium text-foreground mb-1">
               Details (Optional)
             </label>
             <Textarea
@@ -57,12 +57,12 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
               placeholder="Add any extra details here..."
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              rows={3}
-              className="bg-card"
+              rows={2}
+              className="bg-card text-sm"
             />
           </div>
-          <Button type="submit" className="w-full sm:w-auto">
-            <PlusCircle className="mr-2 h-4 w-4" />
+          <Button type="submit" size="sm" className="w-full sm:w-auto">
+            <PlusCircle className="mr-1.5 h-4 w-4" />
             Add Task
           </Button>
         </form>

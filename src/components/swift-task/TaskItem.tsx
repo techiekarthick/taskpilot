@@ -19,44 +19,44 @@ const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask }) =
     <Card
       className={cn(
         "transition-all duration-300 ease-in-out shadow-md hover:shadow-lg",
-        task.completed ? "bg-muted/50 opacity-70" : "bg-card"
+        task.completed ? "bg-muted/30 opacity-60" : "bg-card"
       )}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start space-x-3">
+      <CardHeader className="pb-2 pt-4">
+        <div className="flex items-start space-x-2.5">
           <Checkbox
             id={`task-${task.id}`}
             checked={task.completed}
             onCheckedChange={() => onToggleComplete(task.id)}
-            className="mt-1 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
+            className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary-foreground"
             aria-label={task.completed ? "Mark task as incomplete" : "Mark task as complete"}
           />
           <div className="flex-1">
             <CardTitle
               className={cn(
-                "text-lg font-semibold",
+                "text-base font-semibold",
                 task.completed && "line-through text-muted-foreground"
               )}
             >
               {task.title}
             </CardTitle>
             {task.details && (
-              <p className={cn("text-sm text-muted-foreground mt-1", task.completed && "line-through")}>
+              <p className={cn("text-xs text-muted-foreground mt-0.5", task.completed && "line-through")}>
                 {task.details}
               </p>
             )}
           </div>
         </div>
       </CardHeader>
-      <CardFooter className="flex justify-end space-x-2 pt-2 pb-3 px-4">
+      <CardFooter className="flex justify-end space-x-1.5 pt-1 pb-2 px-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onDeleteTask(task.id)}
           aria-label="Delete task"
-          className="text-destructive hover:bg-destructive/10"
+          className="text-destructive hover:bg-destructive/10 h-7 px-2"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </CardFooter>
     </Card>

@@ -17,20 +17,27 @@ const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask }) 
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-10">
-        <img src="https://placehold.co/300x200.png" alt="Empty task list" data-ai-hint="illustration empty state" className="mx-auto mb-4 rounded-lg shadow-md" />
-        <p className="text-xl font-semibold text-foreground">Your task list is empty!</p>
-        <p className="text-muted-foreground">Add a new task to get started.</p>
+      <div className="text-center py-8">
+        <img 
+            src="https://placehold.co/240x160.png" 
+            alt="Empty task list" 
+            data-ai-hint="illustration empty state" 
+            className="mx-auto mb-3 rounded-lg shadow-md"
+            width="240"
+            height="160"
+        />
+        <p className="text-lg font-semibold text-foreground">Your task list is empty!</p>
+        <p className="text-sm text-muted-foreground">Add a new task to get started.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {activeTasks.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-3 text-foreground">Active Tasks</h2>
-          <div className="space-y-3">
+          <h2 className="text-lg font-semibold mb-2.5 text-foreground">Active Tasks</h2>
+          <div className="space-y-2.5">
             {activeTasks.map(task => (
               <TaskItem
                 key={task.id}
@@ -45,8 +52,8 @@ const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask }) 
 
       {completedTasks.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-3 text-muted-foreground">Completed Tasks</h2>
-           <div className="space-y-3">
+          <h2 className="text-lg font-semibold mb-2.5 text-muted-foreground">Completed Tasks</h2>
+           <div className="space-y-2.5">
             {completedTasks.map(task => (
               <TaskItem
                 key={task.id}
