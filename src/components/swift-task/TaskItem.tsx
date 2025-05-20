@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 import type { Task } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Clock, CalendarDays, Tag, AlertTriangle } from 'lucide-react';
+import { Trash2, Clock, Tag, AlertTriangle, Pencil } from 'lucide-react'; // Added Pencil
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -15,10 +15,11 @@ interface TaskItemProps {
   task: Task;
   onToggleComplete: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onOpenEditModal: (task: Task) => void; // New prop
   isHighlighted?: boolean;
 }
 
-const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask, isHighlighted }) => {
+const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask, onOpenEditModal, isHighlighted }) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,12 +41,12 @@ const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask, isH
         text = "High";
         break;
       case 'medium':
-        variant = "default"; // Using primary color for medium
-        className = "bg-amber-500 hover:bg-amber-600 text-white"; // Custom amber color
+        variant = "default"; 
+        className = "bg-amber-500 hover:bg-amber-600 text-white"; 
         text = "Medium";
         break;
       case 'low':
-        variant = "secondary"; // Muted blue/green from theme
+        variant = "secondary";
         className = "bg-sky-500 hover:bg-sky-600 text-white";
         text = "Low";
         break;
@@ -53,8 +54,6 @@ const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask, isH
     return <Badge variant={variant} className={cn("text-xs capitalize", className)}>{text}</Badge>;
   };
   
-  const isOverdue = task.dueDate && !task.completed && task.dueDate < Date.now();
-
   return (
     <div
       ref={itemRef}
@@ -62,7 +61,6 @@ const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask, isH
         "transition-all duration-300 ease-in-out p-4 rounded-lg hover:shadow-md",
         task.completed ? "bg-muted/30 opacity-70" : "bg-card",
         isHighlighted && "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg",
-        isOverdue && "border-l-4 border-destructive",
         "border-b border-border/20 last:border-b-0" 
       )}
       data-task-id={task.id}
@@ -101,14 +99,6 @@ const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask, isH
                 Category: {task.category}
               </div>
             )}
-            {task.dueDate && !task.completed && (
-              <div className={cn("flex items-center", isOverdue ? "text-destructive font-semibold" : "text-muted-foreground")}>
-                {isOverdue && <AlertTriangle className="h-3.5 w-3.5 mr-1.5 shrink-0 text-destructive" />}
-                <CalendarDays className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                Due: {format(new Date(task.dueDate), "MMM d, yyyy")}
-                {isOverdue && <span className="ml-1">(Overdue)</span>}
-              </div>
-            )}
             {task.reminderAt && !task.completed && (
               <div className="flex items-center text-amber-600 dark:text-amber-500">
                 <Clock className="h-3.5 w-3.5 mr-1.5 shrink-0" />
@@ -118,15 +108,26 @@ const TaskItem: FC<TaskItemProps> = ({ task, onToggleComplete, onDeleteTask, isH
           </div>
 
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDeleteTask(task.id)}
-          aria-label="Delete task"
-          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7 ml-2 shrink-0"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center shrink-0 ml-2 space-y-1 sm:space-y-0 sm:space-x-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenEditModal(task)}
+            aria-label="Edit task"
+            className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-7 w-7"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDeleteTask(task.id)}
+            aria-label="Delete task"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

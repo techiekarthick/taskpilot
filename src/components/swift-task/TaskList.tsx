@@ -10,6 +10,7 @@ interface TaskListProps {
   tasks: Task[];
   onToggleComplete: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onOpenEditModal: (task: Task) => void; // New prop
   highlightedTaskId: string | null;
 }
 
@@ -19,36 +20,24 @@ const getPriorityValue = (priority?: Task['priority']): number => {
     case 'medium': return 2;
     case 'low': return 3;
     case 'none':
-    default: return 4; // 'none' or undefined tasks have lowest priority
+    default: return 4; 
   }
 };
 
-const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask, highlightedTaskId }) => {
+const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask, onOpenEditModal, highlightedTaskId }) => {
   
   const activeTasks = tasks
     .filter(task => !task.completed)
     .sort((a, b) => {
-      // Sort by priority
       const priorityComparison = getPriorityValue(a.priority) - getPriorityValue(b.priority);
       if (priorityComparison !== 0) return priorityComparison;
-
-      // Sort by due date (earliest first, tasks without due date last)
-      if (a.dueDate && b.dueDate) {
-        const dueDateComparison = a.dueDate - b.dueDate;
-        if (dueDateComparison !== 0) return dueDateComparison;
-      } else if (a.dueDate) {
-        return -1; // a has due date, b doesn't, so a comes first
-      } else if (b.dueDate) {
-        return 1;  // b has due date, a doesn't, so b comes first
-      }
       
-      // Sort by creation date (newest first)
       return b.createdAt - a.createdAt;
     });
 
   const completedTasks = tasks
     .filter(task => task.completed)
-    .sort((a, b) => b.createdAt - a.createdAt); // Or sort by a completion timestamp if added
+    .sort((a, b) => b.createdAt - a.createdAt); 
 
   if (tasks.length === 0) {
     return (
@@ -72,6 +61,7 @@ const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask, hi
                 task={task}
                 onToggleComplete={onToggleComplete}
                 onDeleteTask={onDeleteTask}
+                onOpenEditModal={onOpenEditModal} // Pass prop
                 isHighlighted={task.id === highlightedTaskId}
               />
             ))}
@@ -89,6 +79,7 @@ const TaskList: FC<TaskListProps> = ({ tasks, onToggleComplete, onDeleteTask, hi
                 task={task}
                 onToggleComplete={onToggleComplete}
                 onDeleteTask={onDeleteTask}
+                onOpenEditModal={onOpenEditModal} // Pass prop
                 isHighlighted={task.id === highlightedTaskId}
               />
             ))}

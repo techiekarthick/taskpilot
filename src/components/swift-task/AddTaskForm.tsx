@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, CalendarIcon, ClockIcon, Tag, AlertTriangle, CalendarDays, ChevronsUpDown } from 'lucide-react';
+import { PlusCircle, CalendarIcon, ClockIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, setHours, setMinutes, setSeconds, setMilliseconds } from 'date-fns';
@@ -21,7 +21,6 @@ interface AddTaskFormProps {
     details?: string,
     reminderAt?: number | null,
     priority?: Task['priority'],
-    dueDate?: number | null,
     category?: string
   ) => void;
 }
@@ -35,7 +34,6 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
   const [reminderHour, setReminderHour] = useState('');
   const [reminderMinute, setReminderMinute] = useState('');
   const [priority, setPriority] = useState<Task['priority']>('none');
-  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>();
   const [category, setCategory] = useState<string | undefined>(undefined);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,16 +57,11 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
       }
     }
 
-    const dueTimestamp: number | null = selectedDueDate
-      ? setMilliseconds(setSeconds(setMinutes(setHours(selectedDueDate, 0), 0), 0), 0).getTime()
-      : null;
-
     onAddTask(
       title.trim(),
       details.trim() || undefined,
       reminderTimestamp,
       priority === 'none' ? undefined : priority,
-      dueTimestamp,
       category
     );
 
@@ -78,7 +71,6 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
     setReminderHour('');
     setReminderMinute('');
     setPriority('none');
-    setSelectedDueDate(undefined);
     setCategory(undefined);
   };
 
@@ -150,35 +142,6 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        <div>
-          <Label className="block text-xs font-medium text-foreground mb-1.5">
-            Due Date (Optional)
-          </Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal text-xs h-9 bg-input hover:bg-input/90 border-input",
-                  !selectedDueDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
-                {selectedDueDate ? format(selectedDueDate, "PPP") : <span>Pick a due date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDueDate}
-                onSelect={setSelectedDueDate}
-                initialFocus
-                disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
-              />
-            </PopoverContent>
-          </Popover>
         </div>
 
         <div>

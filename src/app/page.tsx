@@ -6,6 +6,7 @@ import type { Task } from '@/lib/types';
 import Header from '@/components/swift-task/Header';
 import AddTaskForm from '@/components/swift-task/AddTaskForm';
 import TaskList from '@/components/swift-task/TaskList';
+import EditTaskModal from '@/components/swift-task/EditTaskModal'; // New import
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,12 +16,13 @@ export default function TaskPilotPage() {
   const { toast } = useToast();
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null); // For editing
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // For editing modal
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Load tasks from local storage on initial render
   useEffect(() => {
     if (!isClient) return;
     const storedTasks = localStorage.getItem('swiftTasks'); 
@@ -34,7 +36,6 @@ export default function TaskPilotPage() {
     }
   }, [isClient]);
 
-  // Save tasks to local storage whenever tasks change
   useEffect(() => {
     if (!isClient) return;
     localStorage.setItem('swiftTasks', JSON.stringify(tasks)); 
@@ -136,7 +137,6 @@ export default function TaskPilotPage() {
     details?: string,
     reminderAt?: number | null,
     priority?: Task['priority'],
-    dueDate?: number | null,
     category?: string
   ) => {
     if (reminderAt && isClient && Notification.permission !== 'granted') {
@@ -154,7 +154,6 @@ export default function TaskPilotPage() {
       createdAt: Date.now(),
       reminderAt: reminderAt,
       priority: priority || 'none',
-      dueDate: dueDate,
       category: category,
     };
     setTasks(prevTasks => [newTask, ...prevTasks]);
@@ -180,6 +179,32 @@ export default function TaskPilotPage() {
     });
   };
 
+  // --- Edit Task Logic ---
+  const handleOpenEditModal = (task: Task) => {
+    setEditingTask(task);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingTask(null);
+  };
+
+  const handleUpdateTask = (updatedTask: Task) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    );
+    toast({
+      title: "Task Updated",
+      description: `"${updatedTask.title}" has been updated.`,
+    });
+    handleCloseEditModal();
+  };
+  // --- End Edit Task Logic ---
+
+
   const completedTasksCount = tasks.filter(task => task.completed).length;
   const totalTasksCount = tasks.length;
 
@@ -204,11 +229,20 @@ export default function TaskPilotPage() {
               tasks={tasks}
               onToggleComplete={handleToggleComplete}
               onDeleteTask={handleDeleteTask}
+              onOpenEditModal={handleOpenEditModal} // Pass handler
               highlightedTaskId={highlightedTaskId}
             />
           </ScrollArea>
         </div>
       </main>
+      {editingTask && (
+        <EditTaskModal
+          task={editingTask}
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          onUpdateTask={handleUpdateTask}
+        />
+      )}
       <Toaster />
     </div>
   );
