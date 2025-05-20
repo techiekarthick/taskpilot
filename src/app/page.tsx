@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function MomentumFlowPage() {
+export default function TaskPilotPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const { toast } = useToast();
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function MomentumFlowPage() {
   // Load tasks from local storage on initial render
   useEffect(() => {
     if (!isClient) return;
-    const storedTasks = localStorage.getItem('swiftTasks'); // Note: If you want to migrate old tasks, this key needs to change too. For now, new name applies to new tasks.
+    const storedTasks = localStorage.getItem('swiftTasks'); // Keeping 'swiftTasks' to not lose existing data
     if (storedTasks) {
       try {
         setTasks(JSON.parse(storedTasks));
@@ -37,7 +37,7 @@ export default function MomentumFlowPage() {
   // Save tasks to local storage whenever tasks change
   useEffect(() => {
     if (!isClient) return;
-    localStorage.setItem('swiftTasks', JSON.stringify(tasks)); // Note: See above.
+    localStorage.setItem('swiftTasks', JSON.stringify(tasks)); // Keeping 'swiftTasks'
   }, [tasks, isClient]);
 
   const requestNotificationPermission = useCallback(async () => {
@@ -77,7 +77,7 @@ export default function MomentumFlowPage() {
       body: task.details || 'Task reminder!',
       icon: '/logo.png', 
       data: { taskId: task.id },
-      tag: `momentum-flow-${task.id}` // Prevents duplicate notifications for the same task
+      tag: `task-pilot-${task.id}` // Prevents duplicate notifications for the same task
     });
 
     notification.onclick = () => {
@@ -173,7 +173,7 @@ export default function MomentumFlowPage() {
   if (!isClient) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <p>Loading MomentumFlow...</p>
+        <p>Loading TaskPilot...</p>
       </div>
     );
   }

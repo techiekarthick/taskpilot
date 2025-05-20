@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'MomentumFlow - Keep Your Tasks Moving',
-  description: 'Organize your tasks and build momentum with MomentumFlow.',
+  title: 'TaskPilot - Steer Your Day',
+  description: 'Organize your tasks and pilot your productivity with TaskPilot.',
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning={true}>
         <ThemeProvider
           defaultTheme="system"
-          storageKey="momentum-flow-theme"
+          storageKey="task-pilot-theme"
         >
           {children}
           <Toaster />

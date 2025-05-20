@@ -10,11 +10,11 @@ const Header: FC = () => {
         <div className="flex items-center space-x-2">
           <ClipboardList className="h-7 w-7 text-primary-foreground bg-primary p-1.5 rounded-md shadow-md" />
           <h1 className="text-xl font-bold tracking-tight text-foreground">
-            MomentumFlow
+            TaskPilot
           </h1>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Keep your tasks moving and get things done.
+          Steer your day and get things done.
         </p>
       </div>
       <ThemeToggleButton />
