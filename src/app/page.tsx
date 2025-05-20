@@ -23,13 +23,13 @@ export default function TaskPilotPage() {
   // Load tasks from local storage on initial render
   useEffect(() => {
     if (!isClient) return;
-    const storedTasks = localStorage.getItem('swiftTasks'); // Keeping 'swiftTasks' to not lose existing data
+    const storedTasks = localStorage.getItem('swiftTasks'); 
     if (storedTasks) {
       try {
         setTasks(JSON.parse(storedTasks));
       } catch (error) {
         console.error("Failed to parse tasks from local storage", error);
-        localStorage.removeItem('swiftTasks'); // Clear corrupted data
+        localStorage.removeItem('swiftTasks'); 
       }
     }
   }, [isClient]);
@@ -37,7 +37,7 @@ export default function TaskPilotPage() {
   // Save tasks to local storage whenever tasks change
   useEffect(() => {
     if (!isClient) return;
-    localStorage.setItem('swiftTasks', JSON.stringify(tasks)); // Keeping 'swiftTasks'
+    localStorage.setItem('swiftTasks', JSON.stringify(tasks)); 
   }, [tasks, isClient]);
 
   const requestNotificationPermission = useCallback(async () => {
@@ -77,7 +77,7 @@ export default function TaskPilotPage() {
       body: task.details || 'Task reminder!',
       icon: '/logo.png', 
       data: { taskId: task.id },
-      tag: `task-pilot-${task.id}` // Prevents duplicate notifications for the same task
+      tag: `task-pilot-${task.id}` 
     });
 
     notification.onclick = () => {
@@ -131,7 +131,14 @@ export default function TaskPilotPage() {
   }, [tasks, showNotification, toast, isClient]);
 
 
-  const handleAddTask = async (title: string, details?: string, reminderAt?: number | null) => {
+  const handleAddTask = async (
+    title: string,
+    details?: string,
+    reminderAt?: number | null,
+    priority?: Task['priority'],
+    dueDate?: number | null,
+    category?: string
+  ) => {
     if (reminderAt && isClient && Notification.permission !== 'granted') {
       const permissionGranted = await requestNotificationPermission();
       if (!permissionGranted && Notification.permission !== 'denied') {
@@ -146,6 +153,9 @@ export default function TaskPilotPage() {
       completed: false,
       createdAt: Date.now(),
       reminderAt: reminderAt,
+      priority: priority || 'none',
+      dueDate: dueDate,
+      category: category,
     };
     setTasks(prevTasks => [newTask, ...prevTasks]);
     toast({
@@ -170,6 +180,9 @@ export default function TaskPilotPage() {
     });
   };
 
+  const completedTasksCount = tasks.filter(task => task.completed).length;
+  const totalTasksCount = tasks.length;
+
   if (!isClient) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
@@ -180,7 +193,7 @@ export default function TaskPilotPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
+      <Header completedTasksCount={completedTasksCount} totalTasksCount={totalTasksCount} />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col lg:flex-row gap-6 lg:gap-8">
         <div className="lg:w-[400px] lg:flex-shrink-0">
           <AddTaskForm onAddTask={handleAddTask} />
