@@ -262,8 +262,8 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
+  React.ComponentProps<typeof Button> // children and asChild are part of React.ComponentProps<typeof Button>
+>(({ className, onClick, asChild, children, ...props }, ref) => { // Explicitly destructure asChild and children
   const { toggleSidebar } = useSidebar()
 
   return (
@@ -277,10 +277,15 @@ const SidebarTrigger = React.forwardRef<
         onClick?.(event)
         toggleSidebar()
       }}
+      asChild={asChild} // Pass asChild to the internal Button component
       {...props}
     >
-      <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      {asChild && children ? children : ( // If asChild is true and children are provided, render children
+        <>                                 // Otherwise, render default content
+          <PanelLeft />
+          <span className="sr-only">Toggle Sidebar</span>
+        </>
+      )}
     </Button>
   )
 })
