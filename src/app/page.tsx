@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { FilterIcon } from 'lucide-react';
+import { FilterIcon, ChevronDown, ChevronUp } from 'lucide-react';
 
 const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
 const priorityOptions: Array<{ value: Task['priority'] | 'all', label: string }> = [
@@ -36,6 +36,7 @@ export default function TaskPilotPage() {
 
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<Task['priority'] | 'all'>('all');
+  const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
 
   useEffect(() => {
@@ -240,6 +241,40 @@ export default function TaskPilotPage() {
       </div>
     );
   }
+  
+  const filterControls = (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="category-filter" className="block text-sm font-medium text-foreground mb-1.5">Category</Label>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger id="category-filter" className="w-full text-sm h-9 bg-input">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {predefinedCategories.map((cat) => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
+            <SelectItem value="uncategorized">Uncategorized</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="priority-filter" className="block text-sm font-medium text-foreground mb-1.5">Priority</Label>
+        <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Task['priority'] | 'all')}>
+          <SelectTrigger id="priority-filter" className="w-full text-sm h-9 bg-input">
+            <SelectValue placeholder="Filter by priority" />
+          </SelectTrigger>
+          <SelectContent>
+            {priorityOptions.map(option => (
+              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -249,47 +284,44 @@ export default function TaskPilotPage() {
         onOpenAddTaskModal={() => setIsAddTaskModalOpen(true)}
       />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 flex-grow flex flex-col md:flex-row gap-6">
-        {/* Filters Section - Left Column on Desktop, Top on Mobile */}
-        <div className="w-full md:w-64 lg:w-72 space-y-6 md:sticky md:top-20 md:self-start"> {/* md:top-20 assumes header height + some margin */}
-          <div className="p-4 bg-card rounded-lg shadow-md space-y-4">
+        {/* Filters Section - Left Column on Desktop, Collapsible on Mobile */}
+        <div className="md:w-64 lg:w-72 md:sticky md:top-20 md:self-start"> {/* md:top-20 assumes header height + some margin */}
+          {/* Mobile Filter Toggle */}
+          <div className="md:hidden mb-4">
+            <Button 
+              variant="outline" 
+              className="w-full flex justify-between items-center"
+              onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+            >
+              <span className="flex items-center">
+                <FilterIcon className="mr-2 h-4 w-4 text-primary" />
+                {showFiltersMobile ? 'Hide Filters' : 'Show Filters'}
+              </span>
+              {showFiltersMobile ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {/* Desktop Filters (always visible) */}
+          <div className="hidden md:block p-4 bg-card rounded-lg shadow-md">
             <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center">
               <FilterIcon className="mr-2 h-5 w-5 text-primary" />
               Filters
             </h2>
-            <div>
-              <Label htmlFor="category-filter" className="block text-sm font-medium text-foreground mb-1.5">Category</Label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger id="category-filter" className="w-full text-sm h-9 bg-input">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {predefinedCategories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="priority-filter" className="block text-sm font-medium text-foreground mb-1.5">Priority</Label>
-              <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as Task['priority'] | 'all')}>
-                <SelectTrigger id="priority-filter" className="w-full text-sm h-9 bg-input">
-                  <SelectValue placeholder="Filter by priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorityOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {filterControls}
           </div>
+
+          {/* Mobile Filters (collapsible) */}
+          {showFiltersMobile && (
+            <div className="md:hidden p-4 bg-card rounded-lg shadow-md mb-4">
+              {/* No separate title needed here as button indicates "Filters" */}
+              {filterControls}
+            </div>
+          )}
         </div>
 
         {/* Task List Section - Right Column on Desktop, Below Filters on Mobile */}
-        <div className="flex-1 min-w-0 flex flex-col"> {/* Added flex flex-col */}
-          <ScrollArea className="flex-grow pr-2"> {/* Changed to flex-grow */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <ScrollArea className="flex-grow pr-2">
             <TaskList
               tasks={filteredTasks}
               onToggleComplete={handleToggleComplete}
