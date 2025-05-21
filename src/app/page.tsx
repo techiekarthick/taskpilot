@@ -96,7 +96,7 @@ export default function TaskPilotPage() {
     console.log(`[showNotification] Attempting to show notification for task: "${task.title}"`);
     const notification = new Notification(task.title, {
       body: task.details || 'Task reminder!',
-      icon: '/logo.png', 
+      // icon: '/logo.png', // Removed as it might cause issues if not present
       data: { taskId: task.id },
       tag: `task-pilot-${task.id}`
     });
@@ -320,8 +320,8 @@ export default function TaskPilotPage() {
         </div>
 
         {/* Task List Section - Right Column on Desktop, Below Filters on Mobile */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          <ScrollArea className="flex-grow pr-2">
+        <div className="flex-1 min-w-0 flex flex-col"> {/* Added flex flex-col */}
+          <ScrollArea className="flex-grow pr-2"> {/* Changed from h-[calc(100vh-200px)] to flex-grow */}
             <TaskList
               tasks={filteredTasks}
               onToggleComplete={handleToggleComplete}
@@ -354,3 +354,4 @@ export default function TaskPilotPage() {
     </div>
   );
 }
+

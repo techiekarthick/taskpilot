@@ -6,6 +6,7 @@ export interface Task {
   completed: boolean;
   createdAt: number; // Using number for Date.now() timestamp
   reminderAt?: number | null; // Timestamp for the reminder
-  priority?: 'high' | 'medium' | 'low' | 'none';
+  priority: 'high' | 'medium' | 'low' | 'none'; // Made priority a required string
   category?: string;
 }
+
