@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, ClockIcon } from 'lucide-react';
-import { format, setHours, setMinutes, setSeconds, setMilliseconds, parseISO } from 'date-fns';
+import { format, setHours, setMinutes, setSeconds, setMilliseconds } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Task } from '@/lib/types';
 
@@ -24,18 +24,22 @@ interface EditTaskModalProps {
 }
 
 const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
+const hourOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')); // 01-12
+const minuteOptions = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0')); // 00, 05, ..., 55
+const periodOptions = ["AM", "PM"];
 
 const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdateTask }) => {
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
   const [reminderDate, setReminderDate] = useState<Date | undefined>();
-  const [reminderHour, setReminderHour] = useState('');
-  const [reminderMinute, setReminderMinute] = useState('');
+  const [selectedHour, setSelectedHour] = useState<string | undefined>();
+  const [selectedMinute, setSelectedMinute] = useState<string | undefined>();
+  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>();
   const [priority, setPriority] = useState<Task['priority']>('none');
   const [category, setCategory] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (task) {
+    if (task && isOpen) {
       setTitle(task.title);
       setDetails(task.details || '');
       setPriority(task.priority || 'none');
@@ -44,15 +48,26 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
       if (task.reminderAt) {
         const reminder = new Date(task.reminderAt);
         setReminderDate(reminder);
-        setReminderHour(format(reminder, "HH"));
-        setReminderMinute(format(reminder, "mm"));
+        setSelectedHour(format(reminder, "hh")); // 12-hour format
+        setSelectedMinute(format(reminder, "mm"));
+        setSelectedPeriod(format(reminder, "a").toUpperCase()); // AM/PM
       } else {
         setReminderDate(undefined);
-        setReminderHour('');
-        setReminderMinute('');
+        setSelectedHour(undefined);
+        setSelectedMinute(undefined);
+        setSelectedPeriod(undefined);
       }
+    } else if (!isOpen) { // Reset when modal is closed
+        setTitle('');
+        setDetails('');
+        setReminderDate(undefined);
+        setSelectedHour(undefined);
+        setSelectedMinute(undefined);
+        setSelectedPeriod(undefined);
+        setPriority('none');
+        setCategory(undefined);
     }
-  }, [task, isOpen]); // Re-populate form when task or isOpen changes
+  }, [task, isOpen]);
 
   if (!task) return null;
 
@@ -61,16 +76,23 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
     if (title.trim() === '') return;
 
     let reminderTimestamp: number | null = null;
-    if (reminderDate && reminderHour.trim() !== '' && reminderMinute.trim() !== '') {
-      const hour = parseInt(reminderHour, 10);
-      const minute = parseInt(reminderMinute, 10);
-      if (!isNaN(hour) && hour >= 0 && hour <= 23 && !isNaN(minute) && minute >= 0 && minute <= 59) {
-        let dateWithTime = setHours(reminderDate, hour);
+    if (reminderDate && selectedHour && selectedMinute && selectedPeriod) {
+      let hour24 = parseInt(selectedHour, 10);
+      const minute = parseInt(selectedMinute, 10);
+
+      if (selectedPeriod === 'PM' && hour24 < 12) {
+        hour24 += 12;
+      } else if (selectedPeriod === 'AM' && hour24 === 12) { // 12 AM is 00 hours
+        hour24 = 0;
+      }
+
+      if (!isNaN(hour24) && hour24 >= 0 && hour24 <= 23 && !isNaN(minute) && minute >= 0 && minute <= 59) {
+        let dateWithTime = setHours(reminderDate, hour24);
         dateWithTime = setMinutes(dateWithTime, minute);
         dateWithTime = setSeconds(dateWithTime, 0);
         dateWithTime = setMilliseconds(dateWithTime, 0);
         // Allow setting reminder for past if user really wants to, or adjust logic here
-        reminderTimestamp = dateWithTime.getTime(); 
+        reminderTimestamp = dateWithTime.getTime();
       }
     }
 
@@ -79,155 +101,163 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
       title: title.trim(),
       details: details.trim() || undefined,
       reminderAt: reminderTimestamp,
-      priority: priority === 'none' ? undefined : priority,
+      priority: priority,
       category: category,
     };
     onUpdateTask(updatedTask);
   };
 
+  const handleClearReminder = () => {
+    setReminderDate(undefined);
+    setSelectedHour(undefined);
+    setSelectedMinute(undefined);
+    setSelectedPeriod(undefined);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px] bg-card">
+      <DialogContent className="sm:max-w-[425px] bg-card flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="text-foreground">Edit Task</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="edit-task-title" className="block text-xs font-medium text-foreground mb-1.5">
-              Task Title
-            </Label>
-            <Input
-              id="edit-task-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="text-sm bg-input placeholder:text-muted-foreground"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-task-details" className="block text-xs font-medium text-foreground mb-1.5">
-              Details (Optional)
-            </Label>
-            <Textarea
-              id="edit-task-details"
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              rows={3}
-              className="text-sm bg-input placeholder:text-muted-foreground"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="flex-grow overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="edit-task-priority" className="block text-xs font-medium text-foreground mb-1.5">
-                Priority
+              <Label htmlFor="edit-task-title" className="block text-xs font-medium text-foreground mb-1.5">
+                Task Title
               </Label>
-              <Select value={priority} onValueChange={(value: Task['priority']) => setPriority(value)}>
-                <SelectTrigger id="edit-task-priority" className="w-full text-xs h-9 bg-input">
-                  <SelectValue placeholder="Set priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input
+                id="edit-task-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                className="text-sm bg-input placeholder:text-muted-foreground"
+              />
             </div>
             <div>
-              <Label htmlFor="edit-task-category" className="block text-xs font-medium text-foreground mb-1.5">
-                Category (Optional)
+              <Label htmlFor="edit-task-details" className="block text-xs font-medium text-foreground mb-1.5">
+                Details (Optional)
               </Label>
-              <Select value={category} onValueChange={(value) => setCategory(value === "none" ? undefined : value)}>
-                <SelectTrigger id="edit-task-category" className="w-full text-xs h-9 bg-input">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {predefinedCategories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Textarea
+                id="edit-task-details"
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                rows={3}
+                className="text-sm bg-input placeholder:text-muted-foreground"
+              />
             </div>
-          </div>
 
-          <div>
-            <Label className="block text-xs font-medium text-foreground mb-1.5">
-              Set Reminder (Optional)
-            </Label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full sm:w-[200px] justify-start text-left font-normal text-xs h-9 bg-input hover:bg-input/90 border-input",
-                      !reminderDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
-                    {reminderDate ? format(reminderDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={reminderDate}
-                    onSelect={setReminderDate}
-                    initialFocus
-                     // Allow selecting past dates for editing reminders
-                  />
-                </PopoverContent>
-              </Popover>
-              <div className="flex gap-2 items-center">
-                 <ClockIcon className="h-3.5 w-3.5 text-muted-foreground ml-1 sm:ml-0" />
-                <Input
-                  type="number"
-                  min="0"
-                  max="23"
-                  placeholder="HH"
-                  value={reminderHour}
-                  onChange={(e) => setReminderHour(e.target.value)}
-                  className="w-16 h-9 text-xs bg-input placeholder:text-muted-foreground"
-                  disabled={!reminderDate}
-                />
-                <span className="text-muted-foreground">:</span>
-                <Input
-                  type="number"
-                  min="0"
-                  max="59"
-                  placeholder="MM"
-                  value={reminderMinute}
-                  onChange={(e) => setReminderMinute(e.target.value)}
-                  className="w-16 h-9 text-xs bg-input placeholder:text-muted-foreground"
-                  disabled={!reminderDate}
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-task-priority" className="block text-xs font-medium text-foreground mb-1.5">
+                  Priority
+                </Label>
+                <Select value={priority} onValueChange={(value: Task['priority']) => setPriority(value)}>
+                  <SelectTrigger id="edit-task-priority" className="w-full text-xs h-9 bg-input">
+                    <SelectValue placeholder="Set priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-task-category" className="block text-xs font-medium text-foreground mb-1.5">
+                  Category (Optional)
+                </Label>
+                <Select value={category} onValueChange={(value) => setCategory(value === "none" ? undefined : value)}>
+                  <SelectTrigger id="edit-task-category" className="w-full text-xs h-9 bg-input">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {predefinedCategories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-             <Button 
-                type="button" 
-                variant="link" 
-                className="p-0 h-auto text-xs mt-1 text-muted-foreground"
-                onClick={() => {
-                    setReminderDate(undefined);
-                    setReminderHour('');
-                    setReminderMinute('');
-                }}
-                disabled={!reminderDate && !reminderHour && !reminderMinute}
-            >
-                Clear Reminder
-            </Button>
-          </div>
 
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" size="sm" className="text-xs">Cancel</Button>
-            </DialogClose>
-            <Button type="submit" size="sm" className="text-xs">Save Changes</Button>
-          </DialogFooter>
-        </form>
+            <div>
+              <Label className="block text-xs font-medium text-foreground mb-1.5">
+                Set Reminder (Optional)
+              </Label>
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center"> 
+                <Popover modal={true}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full sm:w-[200px] justify-start text-left font-normal text-xs h-9 bg-input hover:bg-input/90 border-input",
+                        !reminderDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                      {reminderDate ? format(reminderDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={reminderDate}
+                      onSelect={setReminderDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
+                  <ClockIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <Select value={selectedHour} onValueChange={setSelectedHour} disabled={!reminderDate}>
+                    <SelectTrigger className="w-[65px] text-xs h-9 bg-input">
+                      <SelectValue placeholder="HH" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hourOptions.map(hour => <SelectItem key={hour} value={hour}>{hour}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-muted-foreground shrink-0">:</span>
+                  <Select value={selectedMinute} onValueChange={setSelectedMinute} disabled={!reminderDate}>
+                    <SelectTrigger className="w-[65px] text-xs h-9 bg-input">
+                      <SelectValue placeholder="MM" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {minuteOptions.map(min => <SelectItem key={min} value={min}>{min}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={!reminderDate}>
+                    <SelectTrigger className="w-[70px] text-xs h-9 bg-input">
+                      <SelectValue placeholder="AM/PM" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {periodOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button
+                  type="button"
+                  variant="link"
+                  className="p-0 h-auto text-xs mt-1 text-muted-foreground"
+                  onClick={handleClearReminder}
+                  disabled={!reminderDate && !selectedHour && !selectedMinute && !selectedPeriod}
+              >
+                  Clear Reminder
+              </Button>
+            </div>
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" size="sm" className="text-xs">Cancel</Button>
+              </DialogClose>
+              <Button type="submit" size="sm" className="text-xs">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -23,17 +23,21 @@ interface AddTaskFormProps {
     priority?: Task['priority'],
     category?: string
   ) => void;
-  // onCancel?: () => void; // Optional: If an explicit cancel button is added within the form
 }
 
 const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
+
+const hourOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')); // 01-12
+const minuteOptions = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0')); // 00, 05, ..., 55
+const periodOptions = ["AM", "PM"];
 
 const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
   const [reminderDate, setReminderDate] = useState<Date | undefined>();
-  const [reminderHour, setReminderHour] = useState('');
-  const [reminderMinute, setReminderMinute] = useState('');
+  const [selectedHour, setSelectedHour] = useState<string | undefined>();
+  const [selectedMinute, setSelectedMinute] = useState<string | undefined>();
+  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>();
   const [priority, setPriority] = useState<Task['priority']>('none');
   const [category, setCategory] = useState<string | undefined>(undefined);
 
@@ -42,11 +46,18 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
     if (title.trim() === '') return;
 
     let reminderTimestamp: number | null = null;
-    if (reminderDate && reminderHour.trim() !== '' && reminderMinute.trim() !== '') {
-      const hour = parseInt(reminderHour, 10);
-      const minute = parseInt(reminderMinute, 10);
-      if (!isNaN(hour) && hour >= 0 && hour <= 23 && !isNaN(minute) && minute >= 0 && minute <= 59) {
-        let dateWithTime = setHours(reminderDate, hour);
+    if (reminderDate && selectedHour && selectedMinute && selectedPeriod) {
+      let hour24 = parseInt(selectedHour, 10);
+      const minute = parseInt(selectedMinute, 10);
+
+      if (selectedPeriod === 'PM' && hour24 < 12) {
+        hour24 += 12;
+      } else if (selectedPeriod === 'AM' && hour24 === 12) { // 12 AM is 00 hours
+        hour24 = 0;
+      }
+
+      if (!isNaN(hour24) && hour24 >= 0 && hour24 <= 23 && !isNaN(minute) && minute >= 0 && minute <= 59) {
+        let dateWithTime = setHours(reminderDate, hour24);
         dateWithTime = setMinutes(dateWithTime, minute);
         dateWithTime = setSeconds(dateWithTime, 0);
         dateWithTime = setMilliseconds(dateWithTime, 0);
@@ -54,6 +65,7 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
           reminderTimestamp = dateWithTime.getTime();
         } else {
           console.warn("Reminder time must be in the future.");
+          // Optionally, show a toast message to the user here
         }
       }
     }
@@ -62,7 +74,7 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
       title.trim(),
       details.trim() || undefined,
       reminderTimestamp,
-      priority === 'none' ? undefined : priority,
+      priority,
       category
     );
 
@@ -70,14 +82,15 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
     setTitle('');
     setDetails('');
     setReminderDate(undefined);
-    setReminderHour('');
-    setReminderMinute('');
+    setSelectedHour(undefined);
+    setSelectedMinute(undefined);
+    setSelectedPeriod(undefined);
     setPriority('none');
     setCategory(undefined);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 pt-2 pb-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="task-title" className="block text-xs font-medium text-foreground mb-1.5">
           Task Title
@@ -145,8 +158,8 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
         <Label className="block text-xs font-medium text-foreground mb-1.5">
           Set Reminder (Optional)
         </Label>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Popover>
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <Popover modal={true}>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
@@ -169,29 +182,33 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
               />
             </PopoverContent>
           </Popover>
-          <div className="flex gap-2 items-center">
-             <ClockIcon className="h-3.5 w-3.5 text-muted-foreground ml-1 sm:ml-0" />
-            <Input
-              type="number"
-              min="0"
-              max="23"
-              placeholder="HH"
-              value={reminderHour}
-              onChange={(e) => setReminderHour(e.target.value)}
-              className="w-16 h-9 text-xs bg-input placeholder:text-muted-foreground"
-              disabled={!reminderDate}
-            />
-            <span className="text-muted-foreground">:</span>
-            <Input
-              type="number"
-              min="0"
-              max="59"
-              placeholder="MM"
-              value={reminderMinute}
-              onChange={(e) => setReminderMinute(e.target.value)}
-              className="w-16 h-9 text-xs bg-input placeholder:text-muted-foreground"
-              disabled={!reminderDate}
-            />
+          <div className="flex items-center gap-1.5 mt-2 sm:mt-0"> 
+            <ClockIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <Select value={selectedHour} onValueChange={setSelectedHour} disabled={!reminderDate}>
+              <SelectTrigger className="w-[65px] text-xs h-9 bg-input">
+                <SelectValue placeholder="HH" />
+              </SelectTrigger>
+              <SelectContent>
+                {hourOptions.map(hour => <SelectItem key={hour} value={hour}>{hour}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <span className="text-muted-foreground shrink-0">:</span>
+            <Select value={selectedMinute} onValueChange={setSelectedMinute} disabled={!reminderDate}>
+              <SelectTrigger className="w-[65px] text-xs h-9 bg-input">
+                <SelectValue placeholder="MM" />
+              </SelectTrigger>
+              <SelectContent>
+                {minuteOptions.map(min => <SelectItem key={min} value={min}>{min}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={!reminderDate}>
+              <SelectTrigger className="w-[70px] text-xs h-9 bg-input">
+                <SelectValue placeholder="AM/PM" />
+              </SelectTrigger>
+              <SelectContent>
+                {periodOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

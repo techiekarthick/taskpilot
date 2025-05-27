@@ -96,9 +96,9 @@ export default function TaskPilotPage() {
     console.log(`[showNotification] Attempting to show notification for task: "${task.title}"`);
     const notification = new Notification(task.title, {
       body: task.details || 'Task reminder!',
-      // icon: '/logo.png', // Removed as it might cause issues if not present
       data: { taskId: task.id },
       tag: `task-pilot-${task.id}`
+      // icon: '/logo.png' // Removed as it might cause issues if logo.png is not in public
     });
 
     notification.onclick = () => {
@@ -320,8 +320,8 @@ export default function TaskPilotPage() {
         </div>
 
         {/* Task List Section - Right Column on Desktop, Below Filters on Mobile */}
-        <div className="flex-1 min-w-0 flex flex-col"> {/* Added flex flex-col */}
-          <ScrollArea className="flex-grow pr-2"> {/* Changed from h-[calc(100vh-200px)] to flex-grow */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <ScrollArea className="flex-grow pr-2">
             <TaskList
               tasks={filteredTasks}
               onToggleComplete={handleToggleComplete}
@@ -334,11 +334,13 @@ export default function TaskPilotPage() {
       </main>
 
       <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-card">
+        <DialogContent className="sm:max-w-[425px] bg-card flex flex-col max-h-[85vh]">
           <DialogHeader>
             <DialogTitle className="text-foreground">Add New Task</DialogTitle>
           </DialogHeader>
-          <AddTaskForm onAddTask={handleAddTask} />
+          <div className="flex-grow overflow-y-auto">
+            <AddTaskForm onAddTask={handleAddTask} />
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -354,4 +356,3 @@ export default function TaskPilotPage() {
     </div>
   );
 }
-
