@@ -24,9 +24,8 @@ interface EditTaskModalProps {
 }
 
 const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
-const hourOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')); // 01-12
+const hourOptions = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')); // 00-23
 const minuteOptions = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0')); // 00, 05, ..., 55
-const periodOptions = ["AM", "PM"];
 
 const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdateTask }) => {
   const [title, setTitle] = useState('');
@@ -34,7 +33,6 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
   const [reminderDate, setReminderDate] = useState<Date | undefined>();
   const [selectedHour, setSelectedHour] = useState<string | undefined>();
   const [selectedMinute, setSelectedMinute] = useState<string | undefined>();
-  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>();
   const [priority, setPriority] = useState<Task['priority']>('none');
   const [category, setCategory] = useState<string | undefined>(undefined);
 
@@ -48,14 +46,12 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
       if (task.reminderAt) {
         const reminder = new Date(task.reminderAt);
         setReminderDate(reminder);
-        setSelectedHour(format(reminder, "hh")); // 12-hour format
+        setSelectedHour(format(reminder, "HH")); // 24-hour format
         setSelectedMinute(format(reminder, "mm"));
-        setSelectedPeriod(format(reminder, "a").toUpperCase()); // AM/PM
       } else {
         setReminderDate(undefined);
         setSelectedHour(undefined);
         setSelectedMinute(undefined);
-        setSelectedPeriod(undefined);
       }
     } else if (!isOpen) { // Reset when modal is closed
         setTitle('');
@@ -63,7 +59,6 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
         setReminderDate(undefined);
         setSelectedHour(undefined);
         setSelectedMinute(undefined);
-        setSelectedPeriod(undefined);
         setPriority('none');
         setCategory(undefined);
     }
@@ -76,22 +71,15 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
     if (title.trim() === '') return;
 
     let reminderTimestamp: number | null = null;
-    if (reminderDate && selectedHour && selectedMinute && selectedPeriod) {
-      let hour24 = parseInt(selectedHour, 10);
+    if (reminderDate && selectedHour && selectedMinute) {
+      const hour24 = parseInt(selectedHour, 10);
       const minute = parseInt(selectedMinute, 10);
-
-      if (selectedPeriod === 'PM' && hour24 < 12) {
-        hour24 += 12;
-      } else if (selectedPeriod === 'AM' && hour24 === 12) { // 12 AM is 00 hours
-        hour24 = 0;
-      }
 
       if (!isNaN(hour24) && hour24 >= 0 && hour24 <= 23 && !isNaN(minute) && minute >= 0 && minute <= 59) {
         let dateWithTime = setHours(reminderDate, hour24);
         dateWithTime = setMinutes(dateWithTime, minute);
         dateWithTime = setSeconds(dateWithTime, 0);
         dateWithTime = setMilliseconds(dateWithTime, 0);
-        // Allow setting reminder for past if user really wants to, or adjust logic here
         reminderTimestamp = dateWithTime.getTime();
       }
     }
@@ -111,7 +99,6 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
     setReminderDate(undefined);
     setSelectedHour(undefined);
     setSelectedMinute(undefined);
-    setSelectedPeriod(undefined);
   };
 
   return (
@@ -229,14 +216,6 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
                       {minuteOptions.map(min => <SelectItem key={min} value={min}>{min}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={!reminderDate}>
-                    <SelectTrigger className="w-[70px] text-xs h-9 bg-input">
-                      <SelectValue placeholder="AM/PM" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {periodOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               <Button
@@ -244,7 +223,7 @@ const EditTaskModal: FC<EditTaskModalProps> = ({ task, isOpen, onClose, onUpdate
                   variant="link"
                   className="p-0 h-auto text-xs mt-1 text-muted-foreground"
                   onClick={handleClearReminder}
-                  disabled={!reminderDate && !selectedHour && !selectedMinute && !selectedPeriod}
+                  disabled={!reminderDate && !selectedHour && !selectedMinute}
               >
                   Clear Reminder
               </Button>

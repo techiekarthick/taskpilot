@@ -27,9 +27,8 @@ interface AddTaskFormProps {
 
 const predefinedCategories = ["Work", "Personal", "Shopping", "Study", "Errands", "Appointments", "Fitness", "Home"];
 
-const hourOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')); // 01-12
+const hourOptions = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')); // 00-23
 const minuteOptions = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0')); // 00, 05, ..., 55
-const periodOptions = ["AM", "PM"];
 
 const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
   const [title, setTitle] = useState('');
@@ -37,7 +36,6 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
   const [reminderDate, setReminderDate] = useState<Date | undefined>();
   const [selectedHour, setSelectedHour] = useState<string | undefined>();
   const [selectedMinute, setSelectedMinute] = useState<string | undefined>();
-  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>();
   const [priority, setPriority] = useState<Task['priority']>('none');
   const [category, setCategory] = useState<string | undefined>(undefined);
 
@@ -46,15 +44,9 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
     if (title.trim() === '') return;
 
     let reminderTimestamp: number | null = null;
-    if (reminderDate && selectedHour && selectedMinute && selectedPeriod) {
-      let hour24 = parseInt(selectedHour, 10);
+    if (reminderDate && selectedHour && selectedMinute) {
+      const hour24 = parseInt(selectedHour, 10);
       const minute = parseInt(selectedMinute, 10);
-
-      if (selectedPeriod === 'PM' && hour24 < 12) {
-        hour24 += 12;
-      } else if (selectedPeriod === 'AM' && hour24 === 12) { // 12 AM is 00 hours
-        hour24 = 0;
-      }
 
       if (!isNaN(hour24) && hour24 >= 0 && hour24 <= 23 && !isNaN(minute) && minute >= 0 && minute <= 59) {
         let dateWithTime = setHours(reminderDate, hour24);
@@ -84,7 +76,6 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
     setReminderDate(undefined);
     setSelectedHour(undefined);
     setSelectedMinute(undefined);
-    setSelectedPeriod(undefined);
     setPriority('none');
     setCategory(undefined);
   };
@@ -199,14 +190,6 @@ const AddTaskForm: FC<AddTaskFormProps> = ({ onAddTask }) => {
               </SelectTrigger>
               <SelectContent>
                 {minuteOptions.map(min => <SelectItem key={min} value={min}>{min}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={!reminderDate}>
-              <SelectTrigger className="w-[70px] text-xs h-9 bg-input">
-                <SelectValue placeholder="AM/PM" />
-              </SelectTrigger>
-              <SelectContent>
-                {periodOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
